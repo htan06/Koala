@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
-	"koala.com/dto/auth/request"
-	"koala.com/dto/auth/response"
+	"koala.com/internal/dto/auth/request"
+	"koala.com/internal/dto/auth/response"
 )
 
 type AuthService interface {
@@ -37,7 +37,7 @@ func (auth *AuthServiceImpl) Login(ctx context.Context, login request.LoginDto) 
 	} else {
 		accessToken := auth.jwtService.generateAccessToken(user.Username)
 		refreshToken := auth.jwtService.generateRefreshToken(user.Username)
-		
+
 		return response.TokenResponse{
 			AccessToken: accessToken, 
 			RefreshToken: refreshToken,

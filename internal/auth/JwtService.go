@@ -5,14 +5,14 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"koala.com/config"
+	"koala.com/configs"
 )
 
 type JwtService struct {
-	cfg config.JwtConfig
+	cfg configs.JwtConfig
 }
 
-func NewJwtService(jwtCfg config.JwtConfig) *JwtService {
+func NewJwtService(jwtCfg configs.JwtConfig) *JwtService {
 	return &JwtService{jwtCfg}
 }
 

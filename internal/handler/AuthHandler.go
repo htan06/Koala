@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"koala.com/dto/auth/request"
 	"koala.com/internal/auth"
+	"koala.com/internal/dto/auth/request"
 	"koala.com/internal/utils"
 )
 
