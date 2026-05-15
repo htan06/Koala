@@ -1,7 +1,9 @@
-package entity
+package auth
 
-import "github.com/google/uuid"
-
+import (
+	"github.com/google/uuid"
+	"koala.com/internal/shared"
+)
 type UserStatus string
 
 const (
@@ -11,7 +13,7 @@ const (
 )
 
 type User struct {
-	BaseEntity[uuid.UUID]
+	shared.BaseEntity[uuid.UUID]
 	Username    string     `db:"username"`
 	Password    string     `db:"password"`
 	PhoneNumber string     `db:"phone_number"`

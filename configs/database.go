@@ -8,6 +8,7 @@ import (
 )
 
 func ConnectionDb() *sqlx.DB {
+	//Test, replace to env for production
 	dsn := "postgres://koala:koala1234@localhost:5432/koala?sslmode=disable"
 
 	db, err := sqlx.Connect("pgx", dsn)
