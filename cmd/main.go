@@ -1,9 +1,10 @@
 package main
 
 import (
-	"time"
-
 	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/jmoiron/sqlx"
+	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 	"koala.com/configs"
 	"koala.com/internal/auth"
@@ -13,22 +14,27 @@ import (
 )
 
 func main() {
+	//Logger
 	utils.Logger, _ = zap.NewDevelopment()
 
 	//Jwt config
-	jwtConfig := configs.JwtConfig{
-		SecrectKeyAccess: []byte("dsdadadccececcsacscsa"),
-		SecrectKeyRefresh: []byte("gsncicbds8tbdsahdbsa"),
-		ExpAccessToken: time.Second * 600,
-		ExpRefreshToken: time.Second * 86400,
+	jwtConfig := configs.GetJwtConfig()
+	postgreCfg := configs.GetPostgreConfig()
+
+	err := godotenv.Load()
+	if err != nil {
+		utils.Logger.Fatal("Load env failure")
 	}
 
-	Db := configs.ConnectionDb()
-	defer Db.Close()
+	Db, err := sqlx.Open("pgx", postgreCfg.DbUrl)
+
+	if err != nil {
+		utils.Logger.Fatal(err.Error())
+	}
 
 	userRepository := auth.NewUserRepository(Db)
 	
-	jwtService := auth.NewJwtService(jwtConfig)
+	jwtService := auth.NewJwtService(*jwtConfig)
 	
 	authService := auth.NewAuthService(userRepository, jwtService)
 	

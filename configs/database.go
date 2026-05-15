@@ -1,25 +1,38 @@
 package configs
 
 import (
-	"log"
+	"os"
+	"strconv"
 
-	"github.com/jmoiron/sqlx"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"koala.com/internal/utils"
 )
 
-func ConnectionDb() *sqlx.DB {
-	//Test, replace to env for production
-	dsn := "postgres://koala:koala1234@localhost:5432/koala?sslmode=disable"
+type PostgreConfig struct {
+	DbUrl             string
+	MaxOpenConnection int32
+	MaxIdleConnection int32
+	SslMode           string
+}
 
-	db, err := sqlx.Connect("pgx", dsn)
-	if err != nil {
-		log.Fatalln(err)
+func GetPostgreConfig() *PostgreConfig {
+	maxOpenConnection, errMaxOpenConnection := strconv.Atoi(os.Getenv("DB_MAX_OPEN_CONNS"))
+	maxIdleConnection, errMaxIdleConnection := strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNS"))
+
+	if errMaxOpenConnection != nil {
+		utils.Logger.Warn("Error pasering env DB_MAX_OPEN_CONNS, use default 10")
+		maxOpenConnection = 10
 	}
 
-	db.SetMaxOpenConns(10)
-	db.SetMaxIdleConns(10)
+	if errMaxIdleConnection != nil {
+		utils.Logger.Warn("Error pasering env DB_MAX_IDLE_CONNS, use default 5")
+		maxIdleConnection = 5
+	}
 
-	log.Println("Successfully connected to PostgreSQL!")
-
-	return db
+	return &PostgreConfig{
+		DbUrl: os.Getenv("DATABASE_URL"),
+		MaxOpenConnection: int32(maxOpenConnection),
+		MaxIdleConnection: int32(maxIdleConnection),
+		SslMode: os.Getenv("DB_SSLMODE"),
+	}
 }
