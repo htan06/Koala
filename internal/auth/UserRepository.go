@@ -4,18 +4,27 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+	Save(ctx context.Context, u User) error
+	FindById(ctx context.Context, id uuid.UUID) (User, error)
+	FindByUsername(ctx context.Context, username string) (User, error)
+	FindAll(ctx context.Context) ([]User, error)
+	UpdatePassword(ctx context.Context, u User) error
+}
+
+type UserRepositoryImpl struct {
 	db *sqlx.DB
 }
 
-func NewUserRepository(Db *sqlx.DB) *UserRepository {
-	return &UserRepository{Db}
+func NewUserRepository(Db *sqlx.DB) *UserRepositoryImpl {
+	return &UserRepositoryImpl{Db}
 }
 
-func (userRepository *UserRepository) Save(ctx context.Context, u User) error {
+func (userRepository *UserRepositoryImpl) Save(ctx context.Context, u User) error {
 	_, err := userRepository.db.NamedExecContext(ctx, "INSERT INTO users (username, password, phone_number) VALUES (:username, :password, :phone_number);", &u)
 
 	if err != nil {
@@ -24,7 +33,18 @@ func (userRepository *UserRepository) Save(ctx context.Context, u User) error {
 	return nil
 }
 
-func (userRepository *UserRepository) FindByUsername(ctx context.Context, username string) (User, error) {
+func (userRepository *UserRepositoryImpl) FindById(ctx context.Context, id uuid.UUID) (User, error) {
+	user := User{}
+
+	err := userRepository.db.GetContext(ctx, &user, "SELECT * FROM users WHERE id = $1;", id)
+	if err != nil {
+		return User{}, fmt.Errorf("Find by id: %w", err)
+	}
+
+	return user, nil
+}
+
+func (userRepository *UserRepositoryImpl) FindByUsername(ctx context.Context, username string) (User, error) {
 	user := User{}
 
 	err := userRepository.db.GetContext(ctx, &user, "SELECT * FROM users WHERE username = $1;", username)
@@ -35,7 +55,7 @@ func (userRepository *UserRepository) FindByUsername(ctx context.Context, userna
 	return user, nil
 }
 
-func (userRepository *UserRepository) FindAll(ctx context.Context) ([]User, error) {
+func (userRepository *UserRepositoryImpl) FindAll(ctx context.Context) ([]User, error) {
 	users := []User{}
 
 	err := userRepository.db.SelectContext(ctx, &users, "SELECT * FROM users;")
@@ -46,8 +66,8 @@ func (userRepository *UserRepository) FindAll(ctx context.Context) ([]User, erro
 	return users, nil
 }
 
-func (userRepository *UserRepository) updatePassword(ctx context.Context, u User) error {
-	_, err := userRepository.db.NamedExecContext(ctx, "UPDATE table users SET password = :password WHERE username = :username", &u)
+func (userRepository *UserRepositoryImpl) UpdatePassword(ctx context.Context, u User) error {
+	_, err := userRepository.db.NamedExecContext(ctx, "UPDATE users SET password = :password WHERE username = :username", &u)
 
 	if err != nil {
 		return fmt.Errorf("Insert user query: %w", err)

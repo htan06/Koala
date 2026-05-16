@@ -1,25 +1,32 @@
 package auth
 
 import (
-	"log/slog"
+	"fmt"
 	"time"
-
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"koala.com/configs"
 )
 
-type JwtService struct {
-	cfg configs.JwtConfig
+type JwtService interface {
+	generateAccessToken(userId uuid.UUID) (string, error)
+	generateRefreshToken(userId uuid.UUID) (string, error)
+	ParseAccessToken(tokenString string) (jwt.Claims, error)
+	ParseRefreshToken(tokenString string) (jwt.Claims, error)
 }
 
-func NewJwtService(jwtCfg configs.JwtConfig) *JwtService {
-	return &JwtService{jwtCfg}
+type JwtServiceImpl struct {
+	cfg *configs.JwtConfig
 }
 
-func (jwtService *JwtService) generateAccessToken(username string) string {
+func NewJwtService(jwtCfg *configs.JwtConfig) *JwtServiceImpl {
+	return &JwtServiceImpl{jwtCfg}
+}
+
+func (jwtService *JwtServiceImpl) generateAccessToken(userId uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
 		"iss": "koala",
-		"sub": username,
+		"sub": userId,
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(jwtService.cfg.ExpAccessToken).Unix(),
 	}
@@ -29,17 +36,16 @@ func (jwtService *JwtService) generateAccessToken(username string) string {
 	tokenString, err := token.SignedString(jwtService.cfg.SecrectKeyAccess)
 
 	if err != nil {
-		slog.Error("Err generate access token for %s", username)
-		return ""
+		return "", fmt.Errorf("Generate access token err: %w", err)
 	} else {
-		return tokenString
+		return tokenString, nil
 	}
 }
 
-func (jwtService *JwtService) generateRefreshToken(username string) string {
+func (jwtService *JwtServiceImpl) generateRefreshToken(userId uuid.UUID) (string, error) {
 	claims := jwt.MapClaims{
 		"iss": "koala",
-		"sub": username,
+		"sub": userId,
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(jwtService.cfg.ExpRefreshToken).Unix(),
 	}
@@ -49,16 +55,22 @@ func (jwtService *JwtService) generateRefreshToken(username string) string {
 	tokenString, err := token.SignedString(jwtService.cfg.SecrectKeyRefresh)
 
 	if err != nil {
-		slog.Error("Err generate refresh token for %s", username)
-		return ""
+		return "", fmt.Errorf("Generate refresh token err: %w", err)
 	} else {
-		return tokenString
+		return tokenString, nil
 	}
 }
 
-func (jwtService *JwtService) ValidAcessToken(tokenString string) (jwt.Claims, error) {
+func (jwtService *JwtServiceImpl) ParseAccessToken(tokenString string) (jwt.Claims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 		return jwtService.cfg.SecrectKeyAccess, nil
+	})
+	return token.Claims, err
+}
+
+func (jwtService *JwtServiceImpl) ParseRefreshToken(tokenString string) (jwt.Claims, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
+		return jwtService.cfg.SecrectKeyRefresh, nil
 	})
 	return token.Claims, err
 }

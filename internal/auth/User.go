@@ -20,7 +20,3 @@ type User struct {
 	Email       string     `db:"email"`
 	Status      UserStatus `db:"status"`
 }
-
-func (u *User) ToString() string {
-	return "| " + u.Id.String() + " | " + u.Username + " | " + string(u.Status) + " |\n"
-}

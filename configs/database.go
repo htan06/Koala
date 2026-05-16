@@ -20,12 +20,12 @@ func GetPostgreConfig() *PostgreConfig {
 	maxIdleConnection, errMaxIdleConnection := strconv.Atoi(os.Getenv("DB_MAX_IDLE_CONNS"))
 
 	if errMaxOpenConnection != nil {
-		utils.Logger.Warn("Error pasering env DB_MAX_OPEN_CONNS, use default 10")
+		utils.Logger.Warn("Error pasering env DB_MAX_OPEN_CONNS, use default DB_MAX_OPEN_CONNS: 10")
 		maxOpenConnection = 10
 	}
 
 	if errMaxIdleConnection != nil {
-		utils.Logger.Warn("Error pasering env DB_MAX_IDLE_CONNS, use default 5")
+		utils.Logger.Warn("Error pasering env DB_MAX_IDLE_CONNS, use default DB_MAX_IDLE_CONNS: 5")
 		maxIdleConnection = 5
 	}
 
