@@ -3,16 +3,16 @@ package auth
 import (
 	"context"
 	"fmt"
-
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
-	"koala.com/internal/dto/auth/request"
-	"koala.com/internal/dto/auth/response"
+	"koala.com/internal/auth/dto/request"
+	"koala.com/internal/auth/dto/response"
+	"koala.com/internal/auth/entity"
 )
 
 type AuthService interface {
 	Login(ctx context.Context, login request.LoginDto) (response.TokenResponse, error)
-	RegisterRider(ctx context.Context, registerRider request.RegisterRider) error
+	Register(ctx context.Context, registerRider request.RegisterDto, roleName string) error
 	ChangePassword(ctx context.Context, userId uuid.UUID, ChangePassword request.ChangePasswordDto) error
 }
 
@@ -58,21 +58,25 @@ func (auth *AuthServiceImpl) Login(ctx context.Context, login request.LoginDto) 
 	}, nil
 }
 
-func (auth *AuthServiceImpl) RegisterRider(ctx context.Context, registerRider request.RegisterRider) error {
+func (auth *AuthServiceImpl) Register(ctx context.Context, registerRider request.RegisterDto, roleName string) error {
 	hashPassword, errHashPassword := bcrypt.GenerateFromPassword([]byte(registerRider.Password), 10)
 
 	if errHashPassword != nil {
 		return fmt.Errorf("Register rider: %w", errHashPassword)
 	}
 
-	newRider := User{
+	newRider := entity.User{
 		Username:    registerRider.Username,
 		Password:    string(hashPassword),
 		PhoneNumber: registerRider.PhoneNumber,
 		Email:       registerRider.Email,
 	}
 
-	errSave := auth.userRepository.Save(ctx, newRider)
+	role := entity.Role{
+		RoleName: roleName,
+	}
+
+	errSave := auth.userRepository.Save(ctx, newRider, role)
 
 	if errSave != nil {
 		return fmt.Errorf("Register rider: %w")

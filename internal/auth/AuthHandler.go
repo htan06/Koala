@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"koala.com/internal/dto/auth/request"
+	"koala.com/internal/auth/dto/request"
 	"koala.com/internal/utils"
 )
 
