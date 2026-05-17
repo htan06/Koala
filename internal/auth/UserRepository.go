@@ -27,23 +27,23 @@ func NewUserRepository(Db *sqlx.DB) *UserRepositoryImpl {
 }
 
 func (userRepository *UserRepositoryImpl) Save(ctx context.Context, u entity.User, r entity.Role) error {
-	insetUserQuery := "INSERT INTO users (username, password, phone_number) VALUES ($1, $2, $3) RETURNING id;"
+	insetUserQuery := "INSERT INTO users (username, password, phone_number, status) VALUES ($1, $2, $3, $4) RETURNING id;"
 	insertUserHasRole := "INSERT INTO user_has_role (user_id, role_id) VALUES ($1, (SELECT id from roles WHERE role_name = $2));"
 
-	tx, err := userRepository.db.BeginTxx(ctx, nil)
+	tx, errTx := userRepository.db.BeginTxx(ctx, nil)
 
-	if err != nil {
-		return fmt.Errorf("insert into user: %w", err)
+	if errTx != nil {
+		return fmt.Errorf("insert into user: %w", errTx)
 	}
 
 	defer tx.Rollback()
 
 	user := entity.User{}
 	
-	errInsertUser := tx.GetContext(ctx, &user, insetUserQuery, u.Username, u.Password, u.PhoneNumber)
+	errInsertUser := tx.GetContext(ctx, &user, insetUserQuery, u.Username, u.Password, u.PhoneNumber, u.Status)
 
 	if errInsertUser != nil {
-		return fmt.Errorf("Insert into user: %w", err)
+		return fmt.Errorf("Insert into user: %w", errInsertUser)
 	}
 
 	rows, errInsertUserHasRole := tx.ExecContext(ctx, insertUserHasRole, user.Id, r.RoleName)
@@ -52,7 +52,7 @@ func (userRepository *UserRepositoryImpl) Save(ctx context.Context, u entity.Use
 		return fmt.Errorf("Insert user has role: %w", errInsertUserHasRole)
 	}
 
-	if affectd, err := rows.RowsAffected(); affectd == 0 || err != nil {
+	if affectd, errAff := rows.RowsAffected(); affectd == 0 || errAff != nil {
 		return errors.New("Insert user has role: Can not insert role for user")
 	}
 

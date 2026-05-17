@@ -1,4 +1,4 @@
-package request
+package shared
 
 type RegisterDto struct {
 	Username    string `json: "username"`

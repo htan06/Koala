@@ -41,16 +41,27 @@ func main() {
 	//Service
 	jwtService := auth.NewJwtService(jwtConfig)
 	authService := auth.NewAuthService(userRepository, jwtService)
-	riderService := rider.NewRiderService(riderRepository)
+	riderService := rider.NewRiderService(riderRepository, authService)
 
 	//Handler
 	authHandler := auth.NewAuthHandler(authService)
 	riderHandler := rider.NewRiderHandler(riderService)
 
+	//Middleware
+	jwtMiddleWare := middleware.NewJwtMiddleware(jwtService)
+
 	r := gin.Default()
 
-	r.GET("/rider/profile", middleware.JwtMiddleWare(jwtService), riderHandler.HandleGetProfile)
-	r.POST("/auth/login", authHandler.HandleLogin)
-	r.POST("/auth/change-password", middleware.JwtMiddleWare(jwtService), authHandler.HandleChangePassword)
-	r.Run()
+	v1 := r.Group("api/v1")
+
+	rider := v1.Group("/rider")
+	rider.POST("/profile", jwtMiddleWare.Handler(), riderHandler.HanleAddProfile)
+	rider.GET("/profile", jwtMiddleWare.Handler(), riderHandler.HandleGetProfile)
+	rider.PATCH("/profile", jwtMiddleWare.Handler(), riderHandler.HanleUpadteProfile)
+	rider.POST("/register", riderHandler.HadnleRegister)
+
+	v1.POST("/auth/login", authHandler.HandleLogin)
+	v1.POST("/auth/change-password", jwtMiddleWare.Handler(), authHandler.HandleChangePassword)
+	
+	r.Run("localhost:8080")
 }

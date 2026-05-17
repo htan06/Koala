@@ -10,11 +10,15 @@ import (
 	"koala.com/internal/utils"
 )
 
-func BaseMiddleWare() *gin.Engine {
-	return gin.Default()
+type JwtMiddleware struct {
+	jwtService auth.JwtService
 }
 
-func JwtMiddleWare(jwtService auth.JwtService) gin.HandlerFunc {
+func NewJwtMiddleware(jwtService auth.JwtService) *JwtMiddleware {
+	return &JwtMiddleware{jwtService}
+} 
+
+func (jwtMiddleWare *JwtMiddleware) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
@@ -23,31 +27,39 @@ func JwtMiddleWare(jwtService auth.JwtService) gin.HandlerFunc {
 		}
 
 		parts := strings.Split(authHeader, " ")
-		if parts[0] == "Bearer" && len(parts) == 2 {
-			tokenString := parts[1]
+		if parts[0] != "Bearer" || len(parts) != 2 {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
+			c.Abort()
+		} 
+		
+		tokenString := parts[1]
 
-			claims, err := jwtService.ParseAccessToken(tokenString)
+		claims, err := jwtMiddleWare.jwtService.ParseAccessToken(tokenString)
 
-			if err != nil {
-				c.Abort()
-			}
-
-			userIdString, err := claims.GetSubject()
-
-			if err != nil {
-				utils.Logger.Debug("Jwt middleware: " + err.Error())
-				c.Abort()
-			}
-
-			userId, err := uuid.Parse(userIdString)
-
-			if err != nil {
-				utils.Logger.Debug("Jwt middleware: " + err.Error())
-				c.Abort()
-			}
-
-			c.Set("userId", userId)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
+			c.Abort()
 		}
+		
+		
+		userIdString, err := claims.GetSubject()
+
+		if err != nil {
+			utils.Logger.Debug("Jwt middleware: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
+			c.Abort()
+		}
+
+		userId, err := uuid.Parse(userIdString)
+
+		if err != nil {
+			utils.Logger.Debug("Jwt middleware: " + err.Error())
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
+			c.Abort()
+		}
+
+		c.Set("userId", userId)
+		
 		c.Next()
 	}
 }
