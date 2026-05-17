@@ -1,4 +1,4 @@
-package rider
+package entity
 
 import (
 	"time"
