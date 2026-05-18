@@ -42,8 +42,8 @@ func (auth *AuthServiceImpl) Login(ctx context.Context, login request.LoginDto) 
 		return response.TokenResponse{}, fmt.Errorf("Login: %w", errComparePassword)
 	}
 
-	accessToken, errAccessToken := auth.jwtService.generateAccessToken(user.Id)
-	refreshToken, errRefreshToken := auth.jwtService.generateRefreshToken(user.Id)
+	accessToken, errAccessToken := auth.jwtService.generateAccessToken(*user.Id)
+	refreshToken, errRefreshToken := auth.jwtService.generateRefreshToken(*user.Id)
 
 	if errAccessToken != nil {
 		return response.TokenResponse{}, fmt.Errorf("Login: %w", errAccessToken)
@@ -76,7 +76,7 @@ func (auth *AuthServiceImpl) Register(ctx context.Context, registerRider shared.
 	}
 
 	role := entity.Role{
-		RoleName: roleName,
+		RoleName: &roleName,
 	}
 
 	errSave := auth.userRepository.Save(ctx, newRider, role)

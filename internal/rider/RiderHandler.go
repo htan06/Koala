@@ -39,14 +39,14 @@ func (riderHandler *RiderHandler) HadnleRegister(c *gin.Context) {
 	if errRegister != nil {
 		utils.Logger.Debug(errRegister.Error())
 
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": "Internal server error",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "Account registration failed.",
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Register rider success",
+		"message": "Registration account successful",
 	})
 }
 
@@ -64,13 +64,14 @@ func (riderHandler *RiderHandler) HandleGetProfile(c *gin.Context) {
 
 	if err != nil {
 		utils.Logger.Debug("user id:" + userId.String() + "get profile err: " + err.Error())
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Internal server error"})
+		c.JSON(http.StatusNotFound, gin.H{"message": "Profile not found"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"first_name": profile.FirstName,
 		"last_name": profile.LastName,
+		"avatar_url": profile.AvatarUrl,
 	})
 }
 
@@ -97,7 +98,7 @@ func (riderHandler *RiderHandler) HanleAddProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Add profile success"})
+	c.JSON(http.StatusOK, gin.H{"message": "Add profile successful"})
 }
 
 func (riderHandler *RiderHandler) HanleUpadteProfile(c *gin.Context) {
@@ -123,5 +124,5 @@ func (riderHandler *RiderHandler) HanleUpadteProfile(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Update profile success"})
+	c.JSON(http.StatusOK, gin.H{"message": "Update profile successful"})
 }

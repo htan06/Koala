@@ -22,14 +22,16 @@ func (jwtMiddleWare *JwtMiddleware) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorized"})
 			c.Abort()
+			return
 		}
 
 		parts := strings.Split(authHeader, " ")
 		if parts[0] != "Bearer" || len(parts) != 2 {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
 			c.Abort()
+			return
 		} 
 		
 		tokenString := parts[1]
@@ -39,6 +41,7 @@ func (jwtMiddleWare *JwtMiddleware) Handler() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
 			c.Abort()
+			return
 		}
 		
 		
@@ -48,6 +51,7 @@ func (jwtMiddleWare *JwtMiddleware) Handler() gin.HandlerFunc {
 			utils.Logger.Debug("Jwt middleware: " + err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
 			c.Abort()
+			return
 		}
 
 		userId, err := uuid.Parse(userIdString)
@@ -56,6 +60,7 @@ func (jwtMiddleWare *JwtMiddleware) Handler() gin.HandlerFunc {
 			utils.Logger.Debug("Jwt middleware: " + err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "Unauthorization"})
 			c.Abort()
+			return
 		}
 
 		c.Set("userId", userId)

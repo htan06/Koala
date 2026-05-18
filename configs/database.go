@@ -30,9 +30,9 @@ func GetPostgreConfig() *PostgreConfig {
 	}
 
 	return &PostgreConfig{
-		DbUrl: os.Getenv("DATABASE_URL"),
+		DbUrl:             os.Getenv("DATABASE_URL"),
 		MaxOpenConnection: int32(maxOpenConnection),
 		MaxIdleConnection: int32(maxIdleConnection),
-		SslMode: os.Getenv("DB_SSLMODE"),
+		SslMode:           os.Getenv("DB_SSLMODE"),
 	}
 }

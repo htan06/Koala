@@ -23,6 +23,7 @@ func (authHandler *AuthHandler) HandleLogin(c *gin.Context) {
 	err := c.ShouldBindJSON(&login)
 	if err != nil {
 		utils.Logger.Debug(err.Error())
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
@@ -30,7 +31,7 @@ func (authHandler *AuthHandler) HandleLogin(c *gin.Context) {
 
 	if err != nil {
 		utils.Logger.Debug(err.Error())
-		c.JSON(http.StatusUnauthorized, gin.H{})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Incorrect login information"})
 		return 
 	}
 
@@ -58,7 +59,7 @@ func (authHandler *AuthHandler) HandleChangePassword(c *gin.Context) {
 	if errChangePassword != nil {
 		utils.Logger.Debug(userId.String() + " " + errChangePassword.Error())
 		c.JSON(http.StatusBadRequest, gin.H{
-			"message": "Change password failure",
+			"message": "Change password failed",
 		})
 		return
 	} 

@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"koala.com/configs"
 	"koala.com/internal/auth"
+	"koala.com/internal/driver"
 	"koala.com/internal/middleware"
 	"koala.com/internal/rider"
 	"koala.com/internal/utils"
@@ -37,15 +38,18 @@ func main() {
 	//Repository
 	userRepository := auth.NewUserRepository(db)
 	riderRepository := rider.NewRiderRepository(db)
+	driverRepository := driver.NewDriverRepository(db)
 
 	//Service
 	jwtService := auth.NewJwtService(jwtConfig)
 	authService := auth.NewAuthService(userRepository, jwtService)
 	riderService := rider.NewRiderService(riderRepository, authService)
+	driverService := driver.NewDriverService(driverRepository)
 
 	//Handler
 	authHandler := auth.NewAuthHandler(authService)
 	riderHandler := rider.NewRiderHandler(riderService)
+	driverHandler := driver.NewDriverHandler(driverService)
 
 	//Middleware
 	jwtMiddleWare := middleware.NewJwtMiddleware(jwtService)
@@ -60,8 +64,17 @@ func main() {
 	rider.PATCH("/profile", jwtMiddleWare.Handler(), riderHandler.HanleUpadteProfile)
 	rider.POST("/register", riderHandler.HadnleRegister)
 
-	v1.POST("/auth/login", authHandler.HandleLogin)
-	v1.POST("/auth/change-password", jwtMiddleWare.Handler(), authHandler.HandleChangePassword)
+
+	auth := v1.Group("/auth")
+	auth.POST("/login", authHandler.HandleLogin)
+	auth.POST("/change-password", jwtMiddleWare.Handler(), authHandler.HandleChangePassword)
 	
+
+	driver := v1.Group("/driver")
+	driver.GET("/profile/:user-id", jwtMiddleWare.Handler(), driverHandler.GetProfile)
+	driver.POST("/profile", driverHandler.Register)
+	driver.GET("/profile", driverHandler.GetListProfileByStatus)
+	driver.PATCH("/profile", driverHandler.UpadateProfile)
+
 	r.Run("localhost:8080")
 }

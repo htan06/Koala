@@ -49,10 +49,10 @@ func (riderService *RiderServiceImpl) GetProfile(ctx context.Context, userId uui
 
 func (riderService *RiderServiceImpl) AddProfile(ctx context.Context, userId uuid.UUID, profileDto request.ProfileDto) error {
 	profile := entity.RiderProfile{
-		UserID: userId,
-		FirstName: profileDto.FirstName,
-		LastName: profileDto.LastName,
-		AvatarUrl: profileDto.AvatarUrl,
+		UserID: &userId,
+		FirstName: &profileDto.FirstName,
+		LastName: &profileDto.LastName,
+		AvatarUrl: &profileDto.AvatarUrl,
 	}
 
 	err := riderService.riderProfileRepository.AddProfileById(ctx, profile)
@@ -66,10 +66,10 @@ func (riderService *RiderServiceImpl) AddProfile(ctx context.Context, userId uui
 
 func (riderService *RiderServiceImpl) UpdateProfile(ctx context.Context, userId uuid.UUID, profileDto request.ProfileDto) error {
 	profile := entity.RiderProfile{
-		UserID: userId,
-		FirstName: profileDto.FirstName,
-		LastName: profileDto.LastName,
-		AvatarUrl: profileDto.AvatarUrl,
+		UserID: &userId,
+		FirstName: &profileDto.FirstName,
+		LastName: &profileDto.LastName,
+		AvatarUrl: &profileDto.AvatarUrl,
 	}
 	
 	err := riderService.riderProfileRepository.UpdateProfileById(ctx, profile)
